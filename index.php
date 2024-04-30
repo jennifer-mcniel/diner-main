@@ -7,8 +7,10 @@
 ini_set('display_errors', 1);
 error_reporting(E_ALL);
 
-// Require the autoload file
+// Require the necessary file
 require_once ('vendor/autoload.php');
+require_once ('model/data-layer.php');
+//var_dump(getMeals());
 
 // Instantiate the F3 Base class
 $f3 = Base::instance();
@@ -57,12 +59,11 @@ $f3->route('GET /summary', function($f3) {
 
     // Render a view page
     $view = new Template();
-    echo $view->render('view/order-summary.html');
+    echo $view->render('views/order-summary.html');
 });
 
 // Order Form Part I
 $f3->route('GET|POST /order1', function($f3) {
-    //echo '<h1>My Breakfast Menu</h1>';
 
     // If the form has been posted
     if ($_SERVER['REQUEST_METHOD'] == "POST") {
@@ -72,7 +73,12 @@ $f3->route('GET|POST /order1', function($f3) {
 
         // Get the data from the post array
         $food = $_POST['food'];
-        $meal = $_POST['meal'];
+        if (isset($_POST['meal'])) {
+            $meal = $_POST['meal'];
+        }else {
+            $meal = "";
+        }
+
 
         // If the data valid
         if (true) {
@@ -89,10 +95,15 @@ $f3->route('GET|POST /order1', function($f3) {
         }
     }
 
+    // get data from model and add to hive
+    $meals = getMeals();
+    $f3->set('meals', $meals);
+
     // Render a view page
     $view = new Template();
     echo $view->render('views/order1.html');
 });
+
 
 // Order Form Part II
 $f3->route('GET|POST /order2', function($f3) {
@@ -103,9 +114,11 @@ $f3->route('GET|POST /order2', function($f3) {
     if ($_SERVER['REQUEST_METHOD'] == "POST") {
 
         if (isset($_POST['conds']))
-            $condiments = implode();
+            $condiments = implode(', ',$_POST['conds']);
+        else
+            $condiments = $_POST['conds'];
 
-        $condiments = $_POST['conds'];
+
         if (true) {
             //add data to session array
             $f3->set('SESSION.condiments', $condiments);
@@ -117,6 +130,9 @@ $f3->route('GET|POST /order2', function($f3) {
             echo "<p>Validation errors</p>";
         }
     }
+
+    $condiments = getCondiments();
+    $f3->set('condiments', $condiments);
 
     // Render a view page
     $view = new Template();
