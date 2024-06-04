@@ -9,8 +9,27 @@ error_reporting(E_ALL);
 
 // Require the necessary file
 require_once ('vendor/autoload.php');
-require_once ('model/data-layer.php');
-//var_dump(getMeals());
+
+//var_dump(Validate::validFood('   x'));
+
+/* Test validate class */
+
+
+/* Test the data layer class */
+
+//var_dump(Datalayer::getMeals());
+
+/*Test order class */
+//$order = new Order('pad thai', 'lunch', ['soy sauce']);
+//
+//echo "<pre>";
+//var_dump($order);
+//$order2 = new Order();
+//$order2->setFood('nachos');
+//
+//var_dump($order2);
+//echo "</pre>";
+
 
 // Instantiate the F3 Base class
 $f3 = Base::instance();
@@ -55,15 +74,22 @@ $f3->route('GET /menus/dinner', function() {
 //Order Summary
 $f3->route('GET /summary', function($f3) {
 
-    var_dump( $f3->get('SESSION'));
+    //write data to database
+
+    //var_dump( $f3->get('SESSION'));
 
     // Render a view page
     $view = new Template();
     echo $view->render('views/order-summary.html');
+    session_destroy();
 });
 
 // Order Form Part I
 $f3->route('GET|POST /order1', function($f3) {
+
+    // initialize variables
+    $food = "";
+    $meal = "";
 
     // If the form has been posted
     if ($_SERVER['REQUEST_METHOD'] == "POST") {
@@ -72,31 +98,31 @@ $f3->route('GET|POST /order1', function($f3) {
         //var_dump ($_POST);
 
         // Get the data from the post array
-        $food = $_POST['food'];
-        if (isset($_POST['meal'])) {
+        if(Validate::validFood($_POST['food'])){
+            $food = $_POST['food'];
+        }
+        else {
+            $f3->set('errors["food"]', "Please enter a valid food");
+        }
+
+        if (isset($_POST['meal']) and Validate::validMeal($_POST['meal'])) {
             $meal = $_POST['meal'];
         }else {
-            $meal = "";
+            $f3->set('errors["meal"]', "Please select valid meal");
         }
 
+        //add data to session array
+        $order = new Order($food, $meal);
+        $f3->set('SESSION.order', $order);
 
-        // If the data valid
-        if (true) {
-            //add data to session array
-            $f3->set('SESSION.food', $food);
-            $f3->set('SESSION.meal', $meal);
-
-            //send user to next form
+        //send user to next form if no errors
+        if(empty($f3->get('errors'))){
             $f3->reroute('order2');
-        }
-        else{
-            //temporary (html belongs in views)
-            echo "<p>Validation errors</p>";
         }
     }
 
     // get data from model and add to hive
-    $meals = getMeals();
+    $meals = DataLayer::getMeals();
     $f3->set('meals', $meals);
 
     // Render a view page
@@ -108,7 +134,7 @@ $f3->route('GET|POST /order1', function($f3) {
 // Order Form Part II
 $f3->route('GET|POST /order2', function($f3) {
     //echo '<h1>My Breakfast Menu</h1>';
-    var_dump( $f3->get('SESSION'));
+    //var_dump( $f3->get('SESSION'));
 
     //if form is posted
     if ($_SERVER['REQUEST_METHOD'] == "POST") {
@@ -120,8 +146,8 @@ $f3->route('GET|POST /order2', function($f3) {
 
 
         if (true) {
-            //add data to session array
-            $f3->set('SESSION.condiments', $condiments);
+            //add data to session array get order object from session then add condiments to order object
+            $f3->get('SESSION.order')->setCondiments($condiments);
 
             //send user to next form
             $f3->reroute('summary');
@@ -131,7 +157,7 @@ $f3->route('GET|POST /order2', function($f3) {
         }
     }
 
-    $condiments = getCondiments();
+    $condiments = DataLayer::getCondiments();
     $f3->set('condiments', $condiments);
 
     // Render a view page

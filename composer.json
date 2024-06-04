@@ -1,13 +1,17 @@
 {
-  "name": "tostrander/328/diner",
+  "name": "jmcniel/328/diner-main",
   "authors": [
     {
-      "name": "Tina Ostrander",
-      "email": "tostrander@greenriver.edu"
+      "name": "Jennifer McNiel",
+      "email": "jmcniel@student.greenriver.edu"
     }
   ],
   "require":
   {
     "bcosca/fatfree-core": "dev-master"
+  },
+  "autoload":
+  {
+    "classmap": ["classes/", "model/"]
   }
 }
